@@ -61,15 +61,15 @@ const int rightSlowSpeed = 138; // Slowest speed right wheel
 const int backwardsSpeedLeft = 0;// Backwards speed left Wheel
 const int backwardsSpeedRight = 0;// Backwards speed right Wheel
 const int speedTurns = 10; // Adding speed for turns
-const int speedSharpT = 30; // Adding speed for sharp turns
+const int speedSharp = 30; // Adding speed for sharp turns
 const int speedOneWay = 50; // Adding speed for one direction not turns
 const int startSpeed = 40; // Adding speed for start
 const int additionalSpeed = 60; // Additional modifiable speed  to methods who have speed but could make complications
 
 int lineValues[numberOfSensors];
 int maxSensorValue = 0; // Setting Gate
-const int MAX_BLACK = 950; // The Max Value that is easily reached
-const int MIN_BLACK = 900;// The Min Value of the black
+const int MAX_BLACK = 980; // The Max Value that is easily reached
+const int MIN_BLACK = 950;// The Min Value of the black
 
 int lineCount = 0; // Counts lines at the start of the race for it to grab the object
 
@@ -124,7 +124,7 @@ void loop() {
     setMotors(255, 0, 255, 0);
     delay(50);
     setMotors(153, 0, 163, 0);
-    delay(1350);
+    delay(1050);
   }
   
     bool lineScanInProgress = false; // Flag to indicate if line scanning is in progress
@@ -170,7 +170,10 @@ void loop() {
             delay(50);
             fullScan();
         }
-        if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK){
+        if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK 
+            && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK 
+            && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK 
+            && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK){
               scanBlackBox_END();
         }
     }
@@ -212,7 +215,6 @@ void driveStop() {
 // ------------------------------------------------------------------------------------------------ line sensor
 
 void defaultLineSensor() {
-  // Read reflection sensor values
   fullScan();
 
   static unsigned long previousTime;
@@ -228,32 +230,26 @@ void defaultLineSensor() {
      previousTime = millis();
   }
 
-    // Uses thresholds to determine the behavior on the maximum sensor value
     if (maxSensorValue >= MAX_BLACK) {
 
       if (lineValues[3] >= MIN_BLACK || lineValues[4] >= MIN_BLACK ) {
-        //We start with slowest and then modify the speed to a decent speed
         driveForward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed); 
-        Serial.println("forward");
       }
       else if ( lineValues[2] >= MAX_BLACK) {
-        driveRight(leftSlowSpeed + speedTurns + additionalSpeed,backwardsSpeedRight);
-        Serial.println("right");
+        driveRight(leftSlowSpeed + speedTurns + additionalSpeed, backwardsSpeedRight);
       }
       else if (lineValues[5] >= MAX_BLACK) {
-        driveLeft(backwardsSpeedLeft,rightSlowSpeed + speedTurns + additionalSpeed);
-        Serial.println("left");
+        driveLeft(backwardsSpeedLeft, rightSlowSpeed + speedTurns + additionalSpeed);
       }
       else if (lineValues[1] >= MIN_BLACK) {
-        driveRight(leftSlowSpeed + speedSharpT + additionalSpeed,backwardsSpeedRight);
-        Serial.println("sharp right");
+        driveRight(leftSlowSpeed + speedSharp + additionalSpeed, backwardsSpeedRight);
       }
       else if (lineValues[6] >= MIN_BLACK) {
-        driveLeft(backwardsSpeedLeft,rightSlowSpeed + speedSharpT + additionalSpeed);
-        Serial.println("sharp left");
+        driveLeft(backwardsSpeedLeft, rightSlowSpeed + speedSharp + additionalSpeed);
       }    
     } 
 }
+
 
 void scanBlackBox() {
    for (int i = 0; i < 2; i++) {
@@ -268,11 +264,15 @@ void fullScan() {
   } 
 }
 
-void scanBlackBox_START() {
-  if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK) {
-    for (int i = 0; i < 50; i++) {
-      servo(gripClosed);
+void scanBlackBox_START()
+{
+  if (lineValues[0] >= MAX_BLACK || lineValues[7] >= MAX_BLACK )
+  {
+    for (int i = 0; i < 50; i++)
+    {
+
       delayMicroseconds(1000);
+      servo(gripClosed);
     
     startRace = true;
     }
@@ -286,7 +286,10 @@ void scanBlackBox_START() {
 void scanBlackBox_END() {
   fullScan();
 
-  if(lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK) {
+  if(lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK 
+     && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK
+     && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK
+     && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK) {
     driveBackward(leftSlowSpeed + speedOneWay, rightSlowSpeed + speedOneWay);
     delay(125);
     servo(gripOpen);
@@ -329,32 +332,31 @@ static unsigned long timer;
     
     if (distance <= maxDistance && lineCount >= 4){ //Condition that it counted 4 lines before to avoid conflict with the start code.
           //  It will avoid it anything closer than 20CM
-          driveLeft(backwardsSpeedRight, leftSlowSpeed + speedTurns + additionalSpeed);
+          
+          driveLeft(backwardsSpeedLeft, rightSlowSpeed + speedTurns + additionalSpeed);
           delay(700);
 
-          driveForward(rightSlowSpeed + speedOneWay + additionalSpeed, leftSlowSpeed + speedOneWay + additionalSpeed);
+          driveForward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
           delay(500); // 1000 
 
-          driveRight(rightSlowSpeed + speedTurns + additionalSpeed, backwardsSpeedLeft);
+          driveRight(leftSlowSpeed + speedTurns + additionalSpeed, backwardsSpeedRight);
           delay(700); //850
 
-          driveForward(rightSlowSpeed + speedOneWay + additionalSpeed, leftSlowSpeed + speedOneWay + additionalSpeed);
+          driveForward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
           delay(650);
 
-          driveRight(rightSlowSpeed + speedTurns + additionalSpeed, backwardsSpeedLeft);
+          driveRight(leftSlowSpeed + speedTurns + additionalSpeed, backwardsSpeedRight);
           delay(700); //800
 
-          driveForward(rightSlowSpeed + speedOneWay + additionalSpeed, leftSlowSpeed + speedOneWay + additionalSpeed);
+          driveForward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
           delay(500); //600
 
-          driveLeft(rightSlowSpeed, rightSlowSpeed + speedTurns);
+          driveLeft(leftSlowSpeed, rightSlowSpeed + speedTurns);
           delay(100);
           
         defaultLineSensor();
       }
     else {
-        Serial.print(distance);
-        Serial.println(" cm");
         defaultLineSensor();
       }
        timer = millis() + 100;
