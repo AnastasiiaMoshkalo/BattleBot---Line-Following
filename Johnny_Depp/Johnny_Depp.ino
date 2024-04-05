@@ -104,14 +104,12 @@ void setup() {
 // ------------------------------------------------------------------------------------------------ loop
 
 void loop() {
-  //Start trigger waits for the flag to be lift up
-  if (!startTrigger){
+    if (!startTrigger){
     distanceReader();
     startLights();
     for (int i = 0; i < 50; i++){
     servo(gripOpen);
     delayMicroseconds(1000);
-    servo(gripOpen);
     }
     while (distance < startDistance){
       driveStop();
@@ -233,61 +231,48 @@ void defaultLineSensor() {
     // Uses thresholds to determine the behavior on the maximum sensor value
     if (maxSensorValue >= MAX_BLACK) {
 
-      if (lineValues[3] >= MIN_BLACK || lineValues[4] >= MIN_BLACK )
-      {
+      if (lineValues[3] >= MIN_BLACK || lineValues[4] >= MIN_BLACK ) {
         //We start with slowest and then modify the speed to a decent speed
         driveForward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed); 
         Serial.println("forward");
       }
-      else if ( lineValues[2] >= MAX_BLACK)
-      {
+      else if ( lineValues[2] >= MAX_BLACK) {
         driveRight(leftSlowSpeed + speedTurns + additionalSpeed,backwardsSpeedRight);
         Serial.println("right");
       }
-      else if (lineValues[5] >= MAX_BLACK)
-      {
+      else if (lineValues[5] >= MAX_BLACK) {
         driveLeft(backwardsSpeedLeft,rightSlowSpeed + speedTurns + additionalSpeed);
         Serial.println("left");
       }
-      else if (lineValues[1] >= MIN_BLACK)
-      {
+      else if (lineValues[1] >= MIN_BLACK) {
         driveRight(leftSlowSpeed + speedSharpT + additionalSpeed,backwardsSpeedRight);
         Serial.println("sharp right");
       }
-      else if (lineValues[6] >= MIN_BLACK)
-      {
+      else if (lineValues[6] >= MIN_BLACK) {
         driveLeft(backwardsSpeedLeft,rightSlowSpeed + speedSharpT + additionalSpeed);
         Serial.println("sharp left");
       }    
     } 
 }
 
-void scanBlackBox() //Reading the black box
-{
-   for (int i = 0; i < 2; i++) 
-  {
+void scanBlackBox() {
+   for (int i = 0; i < 2; i++) {
     lineValues[0] = analogRead(lineSensor[0]); 
     lineValues[7] = analogRead(lineSensor[7]); 
   }  
 }
 
-void fullScan() //Reads with all sensors
-{
-  for (int i = 0; i < numberOfSensors; i++) 
-  {
+void fullScan() {
+  for (int i = 0; i < numberOfSensors; i++) {
     lineValues[i] = analogRead(lineSensor[i]);
   } 
 }
 
-void scanBlackBox_START()
-{
-  if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK)
-  {
-    for (int i = 0; i < 50; i++)
-    {
+void scanBlackBox_START() {
+  if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK) {
+    for (int i = 0; i < 50; i++) {
       servo(gripClosed);
       delayMicroseconds(1000);
-      servo(gripClosed);
     
     startRace = true;
     }
@@ -298,29 +283,25 @@ void scanBlackBox_START()
   defaultLineSensor();
 }
 
-void scanBlackBox_END()
-{
+void scanBlackBox_END() {
   fullScan();
 
-  if(lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK)
-  {
-    driveBackward(leftSlowSpeed + speedOneWay,rightSlowSpeed + speedOneWay);
+  if(lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK) {
+    driveBackward(leftSlowSpeed + speedOneWay, rightSlowSpeed + speedOneWay);
     delay(125);
     servo(gripOpen);
 
     endRace = true; 
   }
 
-  if (endRace)
-    {
+  if (endRace) {
       driveBackward(leftSlowSpeed + speedOneWay + additionalSpeed,rightSlowSpeed + speedOneWay + additionalSpeed);
       delay(1350);
       driveStop();
       finishLights();
     }
 
-    while (endRace) //Trapping the system in a while loop for safety of the bot.
-    {
+    while (endRace) { // when ending race, bot should go back, stop and end function.
       driveStop();
       finishLights();
     }  
@@ -328,8 +309,7 @@ void scanBlackBox_END()
 
 // ------------------------------------------------------------------------------------------------ distance sensor
 
-void distanceReader()
-{
+void distanceReader() {
   digitalWrite(triggerPin, LOW); // Reset pin
     delayMicroseconds(2);
     digitalWrite(triggerPin, HIGH); // High pulses for 10 ms
@@ -343,8 +323,7 @@ void distanceReader()
 
 void distanceSensor(){
 static unsigned long timer;
- if (millis() > timer) 
-  {
+ if (millis() > timer) {
 
     distanceReader();
     
@@ -373,8 +352,7 @@ static unsigned long timer;
           
         defaultLineSensor();
       }
-    else
-      {
+    else {
         Serial.print(distance);
         Serial.println(" cm");
         defaultLineSensor();
@@ -418,18 +396,21 @@ void finishLights() {  // Cyan
   setPixelColor(2, 0, 255, 255); 
   setPixelColor(3, 0, 255, 255); 
 }
+
 void leftLights() {  // Green but purple should appear on the left front LED
   setPixelColor(0, 124, 252, 0); 
   setPixelColor(1, 124, 252, 0); 
   setPixelColor(2, 138, 43, 226); 
   setPixelColor(3, 124, 252, 0); 
 }
+
 void rightLights() { // Green but purple should appear on the right front LED
   setPixelColor(0, 124, 252, 0);
   setPixelColor(1, 124,252, 0);
   setPixelColor(2, 124, 252, 0);
   setPixelColor(3, 138, 43, 226);
 }
+
 void neutralLights() { // Green
   setPixelColor(0, 124, 252, 0); //left back
   setPixelColor(1, 124, 252, 0); //right back
