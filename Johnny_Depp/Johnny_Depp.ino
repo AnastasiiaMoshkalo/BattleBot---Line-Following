@@ -1,44 +1,46 @@
 #include <Adafruit_NeoPixel.h> // Neopixel Library to control the neopixels
 
+// Neopixels
+#define PIN 11 // Neopixel pin NI(Input)
+#define NUMPIXELS 4 // There are 4 neopixels on the board
 void setPixelColor(int pixel, uint8_t red, uint8_t green, uint8_t blue);
 void startLights();
 void finishLights();
 void leftLights();
 void rightLights();
 void neutralLights();
+
+// Distance sensors
+const int echoPin = 9; // Echo sensor echo pin
+const int triggerPin = 8; // Echo sensor trigger pin
+void distanceSensor();
+void distanceReader();
+
+// Gripper
+const int gripperPin = 12; // Gripper pin GR
+void servo(int pulse);
+
+// Motors
+const int leftBackwards = 7; // Left backwards A1
+const int leftForward = 6; // Left forwards A2
+const int rightBackwards = 4; // Right backwards B1
+const int rightForward = 5; // Right forwards B2
+const int motorPulseLeft = 2; // Left motor pulse R1
+const int motorPulseRight = 3; // Right motor pulse R2 
 void setMotors(int LFMotor, int LBMotor, int RFMotor, int RBMotor);
 void driveForward(int leftSpeed, int rightSpeed);
 void driveBackward(int leftSpeed, int rightSpeed);
 void driveLeft(int leftSpeed, int rightSpeed);
 void driveRight(int leftSpeed, int rightSpeed);
 void driveStop();
+
+const int numberOfSensors = 8;
+int lineSensor[numberOfSensors] = {A5, A4, A7, A3, A2, A6, A1, A0} ; // Linesensor pins
 void defaultLineSensor();
 void scanBlackBox_START();
 void scanBlackBox_END();
 void scanBlackBox(); // Sensors 0 and 7
 void fullScan(); // All Sensors
-void distanceSensor();
-void distanceReader();
-void servo(int pulse);
-
-#define PIN 11 // Neopixel pin NI(Input)
-#define NUMPIXELS 4 // There are 4 neopixels on the board
-
-const int echoPin = 9; // Echo sensor echo pin
-const int triggerPin = 8; // Echo sensor trigger pin
-
-const int gripperPin = 12; // Gripper pin GR
-
-const int leftBackwards = 7; // Motor Left Backwards pin A1
-const int leftForward = 6; // Motor Left Forwards pin A2
-const int rightBackwards = 4; // Motor Right Backwards pin B1
-const int rightForward = 5; // Motor Right Forwards pin B2
-
-const int motorPulseLeft = 2; // Motor pin R1
-const int motorPulseRight = 3; // Motor pin R2 
-
-const int numberOfSensors = 8;
-int lineSensor[numberOfSensors] = {A5, A4, A7, A3, A2, A6, A1, A0} ; // Linesensor pins
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, PIN, NEO_RGB + NEO_KHZ800); // Neopixel needed code from library
 
@@ -56,22 +58,23 @@ int gripOpen = 1500; // pulse length servo open
 int gripClosed = 1050; // pulse length servo closed
 int servoInterval = 20; // time between pulse
 
-const int leftSlowSpeed = 138; // Slowest speed left wheel
-const int rightSlowSpeed = 138; // Slowest speed right wheel
-const int backwardsSpeedLeft = 0;// Backwards speed left Wheel
-const int backwardsSpeedRight = 0;// Backwards speed right Wheel
+const int leftSlowSpeed = 138; // Slowest speed of theleft wheel
+const int rightSlowSpeed = 138; // Slowest speed of the right wheel
+const int backwardsSpeedLeft = 0;// Backwards speed of the left Wheel
+const int backwardsSpeedRight = 0;// Backwards speed of the right Wheel
+
 const int speedTurns = 10; // Adding speed for turns
 const int speedSharp = 30; // Adding speed for sharp turns
 const int speedOneWay = 50; // Adding speed for one direction not turns
 const int startSpeed = 40; // Adding speed for start
-const int additionalSpeed = 60; // Additional modifiable speed  to methods who have speed but could make complications
+const int additionalSpeed = 60; // Additional modifiable speed if needed
 
 int lineValues[numberOfSensors];
 int maxSensorValue = 0; // Setting Gate
-const int MAX_BLACK = 980; // The Max Value that is easily reached
-const int MIN_BLACK = 950;// The Min Value of the black
+int lineCount = 0; // line counter for the start of the race for it to grab the object
 
-int lineCount = 0; // Counts lines at the start of the race for it to grab the object
+const int MAX_BLACK = 980; // Max value of black reached
+const int MIN_BLACK = 950;// The minimum value that reaches black
 
 // ------------------------------------------------------------------------------------------------ setup
 
@@ -79,19 +82,19 @@ void setup() {
   strip.begin(); // Initialize neopixels
   Serial.begin(9600); // Start serial monitoring on 9600 for debugging
 
-  pinMode(leftForward, OUTPUT);  // Specify the LeftForward motor to be Output
-  pinMode(leftBackwards, OUTPUT);  // Specify the LeftBackward motor to be Output
-  pinMode(rightForward, OUTPUT);  // Specify the RightForward motor to be Output
-  pinMode(rightBackwards, OUTPUT);  // Specify the RightBackward motor to be Output
+  pinMode(leftForward, OUTPUT);  // Specify the leftForward motor
+  pinMode(leftBackwards, OUTPUT);  // Specify the leftBackward motor
+  pinMode(rightForward, OUTPUT);  // Specify the rightForward motor
+  pinMode(rightBackwards, OUTPUT);  // Specify the rightBackward motor
 
-  pinMode(gripperPin, OUTPUT);  // Specify the gripperpin to be Output
+  pinMode(gripperPin, OUTPUT);  // Specify the gripperpin
   pinMode(gripperPin, LOW);
 
-  pinMode(triggerPin, OUTPUT);  // Specify the triggerPin to be Output
-  pinMode(echoPin, INPUT);  // Specify the echoPin to be Input
+  pinMode(triggerPin, OUTPUT);  // Specify the triggerPin
+  pinMode(echoPin, INPUT);  // Specify the echoPin
 
-  pinMode(motorPulseLeft, INPUT); // Specify the motorPulseLeft to be Input
-  pinMode(motorPulseRight,INPUT); // Specify the motorPulseRight to be Input
+  pinMode(motorPulseLeft, INPUT); // Specify the motorPulseLeft
+  pinMode(motorPulseRight,INPUT); // Specify the motorPulseRight
 
    for(int i = 0;i<=7;i++){
     pinMode(lineSensor[i], INPUT);
@@ -314,24 +317,24 @@ void scanBlackBox_END() {
 
 void distanceReader() {
   digitalWrite(triggerPin, LOW); // Reset pin
-    delayMicroseconds(2);
-    digitalWrite(triggerPin, HIGH); // High pulses for 10 ms
-    delayMicroseconds(10);
-    digitalWrite(triggerPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(triggerPin, HIGH); // High pulses for 10 ms
+  delayMicroseconds(10);
+  digitalWrite(triggerPin, LOW);
 
-    duration = pulseIn(echoPin, HIGH); // Reads pins
+  duration = pulseIn(echoPin, HIGH); // Reads pins
 
-    distance = (duration / 2) * 0.034; // 343 m/s per second as speed of sound
+  distance = (duration / 2) * 0.034; // 343 m/s per second as speed of sound
 }
 
-void distanceSensor(){
+void distanceSensor() {
 static unsigned long timer;
  if (millis() > timer) {
 
     distanceReader();
     
-    if (distance <= maxDistance && lineCount >= 4){ //Condition that it counted 4 lines before to avoid conflict with the start code.
-          //  It will avoid it anything closer than 20CM
+    if (distance <= maxDistance && lineCount >= 4){ // Condition that it avoided 4 lines (at the start) so it doesnt mix in at the beginning
+          //  It will avoid it anything closer at approx. 20CM
           
           driveLeft(backwardsSpeedLeft, rightSlowSpeed + speedTurns + additionalSpeed);
           delay(700);
