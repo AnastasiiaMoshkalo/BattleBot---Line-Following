@@ -55,17 +55,16 @@ const int maxDistance = 20;
 const int startDistance = 15;
 float distance; 
 float duration;
-const int echoInterval = 100; // Time between seeing the object and calculating the distance
+const int echoInterval = 100; // time between seeing the object and calculating the distance
 
 int gripOpen = 1500; // pulse length servo open
 int gripClosed = 1050; // pulse length servo closed
 int servoInterval = 20; // time between pulse
 
-const int leftSlowSpeed = 140; // Slowest speed of the left wheel
-const int rightSlowSpeed = 140; // Slowest speed of the right wheel
-const int backwardsSpeedLeft = 0;// Backwards speed of the left Wheel
-const int backwardsSpeedRight = 0;// Backwards speed of the right Wheel
-// backward wheels are unneeded thus we just put it as 0
+const int leftSlowSpeed = 140; // slowest speed of the left wheel
+const int rightSlowSpeed = 140; // slowest speed of the right wheel
+const int backwardsSpeedLeft = 0;// backwards speed of the left Wheel
+const int backwardsSpeedRight = 0;// backwards speed of the right Wheel
 
 const int speedTurns = 40; // Adding speed for turns
 const int speedSharpTurns = 50; // Adding speed for sharp turns
@@ -74,7 +73,7 @@ const int startSpeed = 50; // Adding speed for start
 const int additionalSpeed = 60; // Additional modifiable speed if needed
 
 int lineValues[numberOfSensors];
-int maxSensorValue = 0; // Setting Gate
+int maxSensorValue = 0; // setting Gate
 int lineCount = 0; // line counter for the start of the race for it to grab the object
 
 const int MAX_BLACK = 950; // Max value of black reached
@@ -100,7 +99,7 @@ void setup() {
   pinMode(motorPulseLeft, INPUT); // Specify the motorPulseLeft
   pinMode(motorPulseRight,INPUT); // Specify the motorPulseRight
 
-   for(int i = 0;i<=7;i++){
+   for(int i = 0; i <= 7; i++){
     pinMode(lineSensor[i], INPUT);
   }
 
@@ -111,75 +110,79 @@ void setup() {
 // ------------------------------------------------------------------------------------------------ loop
 
 void loop() {
-    if (!startFlag){ // if the starting flag hasnt been lifted, dont move.
+  if (!startFlag) {
     distanceReader();
     startLights();
-    for (int i = 0; i < 50; i++){
+    for (int i = 0; i < 50; i++) {
     servo(gripOpen);
     delayMicroseconds(1000);
+    servo(gripOpen);
     }
-    while (distance < startDistance){
+    while (distance < startDistance) {
       idle();
+      Serial.println(distance);
       distanceReader();
       
-      if (distance > startDistance){
+      if (distance > startDistance) {
         break;
       }
-      
-    } 
-    startFlag = true; // if it did, start fast as a head start then slowly to count the lines before the first black box
+    }
+    startFlag = true;
+    Serial.println("left while loop");
     setMotors(255, 0, 255, 0);
     delay(50);
-    setMotors(155, 0, 165, 0);
-    delay(1350); 
-  }
+    setMotors(150, 0, 165, 0);
+    delay(1350);
+  } 
   
-    bool lineScanInProgress = false; // flag to indicate if line scanning is in progress
-    unsigned long currentMillis = millis(); // get the current time
+    bool lineScanInProgress = false; // Flag to indicate if line scanning is in progress
+    unsigned long currentMillis = millis(); // Get the current time
     scanBlackBox();
     static unsigned long timer;
-    if (currentMillis > timer){
-      if (lineValues[0] >= MIN_BLACK && !lineScanInProgress && lineValues[7] >= MIN_BLACK && !lineScanInProgress){
-        lineScanInProgress = true; // set flag to indicate line scanning is in progress
-        lineCount++; // add to the counter
+    if (currentMillis > timer) {
+      if (lineValues[0] >= MAX_BLACK && !lineScanInProgress && lineValues[7] >= MAX_BLACK && !lineScanInProgress) {
+        lineScanInProgress = true; // Set flag to indicate line scanning is in progress
+        lineCount++; // Add to the counter
       }
       timer = currentMillis + 50;
     }
     
-    //start sequence of grabbing the object
-    if (lineScanInProgress && lineCount >= 4) {
-          if (!startRace){
+    //Start sequence of grabbing the object
+    if (lineScanInProgress && lineCount >= 4)  {
+          if (!startRace) {
              scanBlackBox();
-             while (lineValues[0] >= MIN_BLACK || lineValues[7] >= MIN_BLACK ){
-             scanFirstBlackBox();
-    if (startRace){
-          break;
-      }
-    }
-  }
-  lineScanInProgress = false;
-}
-    
-    followLine();
-    distanceSensor(); // detect obstacles and avoid them
+            while (lineValues[0] >= MAX_BLACK || lineValues[7] >= MAX_BLACK ) {
+              scanFirstBlackBox();
 
-  if (!endRace && startRace){
+              if (startRace) {
+                break;
+              }
+            }
+          }
+        lineScanInProgress = false;
+    }  
+    followLine();
+    distanceSensor(); //Detecting obstactles and avoid them
+  if (!endRace && startRace) {
     scanLine();
-    if (lineValues[0] >= MIN_BLACK || lineValues[7] >= MIN_BLACK) {
-            setMotors(155, 0, 165, 0);
-            pulseIn(2, HIGH, 400UL); // function to double check if the bot crossed a black box  or not
-            pulseIn(3, HIGH, 400UL); // Pin , Pulse , Interval
-            pulseIn(2, HIGH, 400UL);
-            pulseIn(3, HIGH, 400UL);
-            pulseIn(2, HIGH, 400UL);
-            pulseIn(3, HIGH, 400UL);
+    if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK 
+     && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK 
+     && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK&& lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK)  {
+          //This code checks twice if it's the black square or not
+            setMotors(150, 0, 165, 0);
+            pulseIn(2,HIGH,400UL); // Pin , Pulse , Interval
+            pulseIn(3,HIGH,400UL);
+            pulseIn(2,HIGH,400UL);
+            pulseIn(3,HIGH,400UL);
+            pulseIn(2,HIGH,400UL);
+            pulseIn(3,HIGH,400UL);
             delay(50);
             scanLine();
         }
         if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK 
-            && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK 
-            && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK 
-            && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK){
+         && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK 
+         && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK 
+         && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK) {
               scanSecondBlackBox();
         }
     }
@@ -220,6 +223,7 @@ void idle() {
 
 // ------------------------------------------------------------------------------------------------ line sensor
 
+
 void followLine() {
   scanLine();
   static unsigned long previousTime;
@@ -228,26 +232,30 @@ void followLine() {
       if (lineValues[3] > maxSensorValue && lineValues[4] > maxSensorValue) {
         maxSensorValue = lineValues[3];
       }
-     } 
+    } 
      previousTime = millis();
-    }
+  }
+
+    // use the thresholds to determine the behavior on the maximum sensor value
     if (maxSensorValue >= MAX_BLACK) {
-      if (lineValues[3] >= MIN_BLACK || lineValues[4] >= MIN_BLACK ) { // - - - 0 0 - - -
+
+      if (lineValues[3] >= MIN_BLACK || lineValues[4] >= MIN_BLACK ) {
+        //We start with slowest and then modify the speed to a decent speed
         forward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed); 
       }
-      else if (lineValues[2] >= MAX_BLACK) { // - - - - - 0 - -
+      else if ( lineValues[2] >= MAX_BLACK) {
         right(leftSlowSpeed + speedTurns + additionalSpeed, backwardsSpeedRight);
       }
-      else if (lineValues[5] >= MAX_BLACK) { // - - 0 - - - - -
+      else if (lineValues[5] >= MAX_BLACK) {
         left(backwardsSpeedLeft, rightSlowSpeed + speedTurns + additionalSpeed);
       }
-      else if (lineValues[1] >= MIN_BLACK) { // - - - - - - 0 -
+      else if (lineValues[1] >= MIN_BLACK) {
         right(leftSlowSpeed + speedSharpTurns + additionalSpeed, backwardsSpeedRight);
       }
-      else if (lineValues[6] >= MIN_BLACK) { // - 0 - - - - - -
+      else if (lineValues[6] >= MIN_BLACK) {
         left(backwardsSpeedLeft, rightSlowSpeed + speedSharpTurns + additionalSpeed);
       }    
-   } 
+    } 
 }
 
 void scanBlackBox() {
@@ -272,14 +280,14 @@ void scanFirstBlackBox() {
     }
   }
   left(leftSlowSpeed, rightSlowSpeed + speedTurns);
-  delay(1345);
+  delay(1545);
   forward(leftSlowSpeed + startSpeed, rightSlowSpeed + startSpeed);
   followLine();
 }
 
+
 void scanSecondBlackBox() {
   scanLine();
-
   if(lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK && 
       lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && 
       lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK && 
@@ -287,7 +295,6 @@ void scanSecondBlackBox() {
     backwards(leftSlowSpeed + speedOneWay, rightSlowSpeed + speedOneWay);
     delay(125);
     servo(gripOpen);
-
     endRace = true; 
   }
 
@@ -297,7 +304,6 @@ void scanSecondBlackBox() {
       idle();
       finishLights();
     }
-
     while (endRace) { // when ending race, bot should go back, stop and end function.
       idle();
       finishLights();
@@ -321,31 +327,29 @@ void distanceReader() {
 void distanceSensor() {
 static unsigned long timer;
  if (millis() > timer) {
-
     distanceReader();
-    
     if (distance <= maxDistance && lineCount >= 4){ // condition that it avoided 4 lines (at the start) so it doesnt mix in at the beginning
           //  It will avoid it anything closer at approx. 20CM
           
-          left(backwardsSpeedLeft, rightSlowSpeed + speedTurns + additionalSpeed); 
-          delay(700);
+          right(leftSlowSpeed + speedTurns + additionalSpeed, backwardsSpeedRight); 
+          delay(500);
 
           forward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
-          delay(500); // 1000 
+          delay(300); // 1000 
 
-          right(leftSlowSpeed + speedTurns + additionalSpeed, backwardsSpeedRight);
-          delay(700); //850
-
-          forward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
-          delay(650);
-
-          right(leftSlowSpeed + speedTurns + additionalSpeed, backwardsSpeedRight);
-          delay(700); //800
+          left(backwardsSpeedLeft, rightSlowSpeed + speedTurns + additionalSpeed);
+          delay(500); //850
 
           forward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
-          delay(500); //600
+          delay(550);
 
-          left(leftSlowSpeed, rightSlowSpeed + speedTurns);
+          left(backwardsSpeedRight, leftSlowSpeed + speedTurns + additionalSpeed);
+          delay(500); //800
+
+          forward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
+          delay(350); //600
+
+          right(rightSlowSpeed + speedTurns, leftSlowSpeed);
           delay(100);
           
         followLine();
