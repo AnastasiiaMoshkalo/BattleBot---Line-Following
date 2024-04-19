@@ -120,7 +120,6 @@ void loop() {
     }
     while (distance < startDistance) {
       idle();
-      Serial.println(distance);
       distanceReader();
       
       if (distance > startDistance) {
@@ -128,7 +127,6 @@ void loop() {
       }
     }
     startFlag = true;
-    Serial.println("left while loop");
     setMotors(255, 0, 255, 0);
     delay(50);
     setMotors(150, 0, 165, 0);
@@ -160,18 +158,19 @@ void loop() {
             }
           }
         lineScanInProgress = false;
-    }  
+    }
     followLine();
     distanceSensor(); //Detecting obstactles and avoid them
   if (!endRace && startRace) {
     scanLine();
-    if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK 
-     && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK 
-     && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK&& lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK)  {
+    if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK && 
+        lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && 
+        lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK &&
+        lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK)  {
           //This code checks twice if it's the black square or not
             setMotors(150, 0, 165, 0);
             pulseIn(2,HIGH,400UL); // Pin , Pulse , Interval
-            pulseIn(3,HIGH,400UL);
+            pulseIn(3,HIGH,400UL); // Calls that measure the duration of a pulse
             pulseIn(2,HIGH,400UL);
             pulseIn(3,HIGH,400UL);
             pulseIn(2,HIGH,400UL);
@@ -179,11 +178,11 @@ void loop() {
             delay(50);
             scanLine();
         }
-        if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK 
-         && lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK 
-         && lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK 
-         && lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK) {
-              scanSecondBlackBox();
+        if (lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK &&
+            lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK &&
+            lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK &&
+            lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK) {
+            scanSecondBlackBox();
         }
     }
 }
@@ -223,7 +222,6 @@ void idle() {
 
 // ------------------------------------------------------------------------------------------------ line sensor
 
-
 void followLine() {
   scanLine();
   static unsigned long previousTime;
@@ -243,7 +241,7 @@ void followLine() {
         //We start with slowest and then modify the speed to a decent speed
         forward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed); 
       }
-      else if ( lineValues[2] >= MAX_BLACK) {
+        else if ( lineValues[2] >= MAX_BLACK) {
         right(leftSlowSpeed + speedTurns + additionalSpeed, backwardsSpeedRight);
       }
       else if (lineValues[5] >= MAX_BLACK) {
@@ -255,7 +253,7 @@ void followLine() {
       else if (lineValues[6] >= MIN_BLACK) {
         left(backwardsSpeedLeft, rightSlowSpeed + speedSharpTurns + additionalSpeed);
       }    
-    } 
+   } 
 }
 
 void scanBlackBox() {
@@ -280,27 +278,25 @@ void scanFirstBlackBox() {
     }
   }
   left(leftSlowSpeed, rightSlowSpeed + speedTurns);
-  delay(1545);
+  delay(1595);
   forward(leftSlowSpeed + startSpeed, rightSlowSpeed + startSpeed);
   followLine();
 }
 
-
 void scanSecondBlackBox() {
   scanLine();
   if(lineValues[0] >= MAX_BLACK && lineValues[7] >= MAX_BLACK && 
-      lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && 
-      lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK && 
-      lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK) {
+     lineValues[1] >= MAX_BLACK && lineValues[2] >= MAX_BLACK && 
+     lineValues[3] >= MAX_BLACK && lineValues[4] >= MAX_BLACK && 
+     lineValues[5] >= MAX_BLACK && lineValues[6] >= MAX_BLACK) {
     backwards(leftSlowSpeed + speedOneWay, rightSlowSpeed + speedOneWay);
     delay(125);
     servo(gripOpen);
     endRace = true; 
   }
-
   if (endRace) {
-      backwards(leftSlowSpeed + speedOneWay + additionalSpeed,rightSlowSpeed + speedOneWay + additionalSpeed);
-      delay(1350);
+      backwards(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
+      delay(1100);
       idle();
       finishLights();
     }
@@ -335,19 +331,19 @@ static unsigned long timer;
           delay(500);
 
           forward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
-          delay(300); // 1000 
+          delay(300);
 
           left(backwardsSpeedLeft, rightSlowSpeed + speedTurns + additionalSpeed);
-          delay(500); //850
+          delay(500);
 
           forward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
           delay(550);
 
           left(backwardsSpeedRight, leftSlowSpeed + speedTurns + additionalSpeed);
-          delay(500); //800
+          delay(500);
 
           forward(leftSlowSpeed + speedOneWay + additionalSpeed, rightSlowSpeed + speedOneWay + additionalSpeed);
-          delay(350); //600
+          delay(350);
 
           right(rightSlowSpeed + speedTurns, leftSlowSpeed);
           delay(100);
@@ -376,6 +372,7 @@ void servo(int pulse) {
     timer = millis() + servoInterval;
   }
 }
+
 // ------------------------------------------------------------------------------------------------ neopixels
 
 void setPixelColor(int pixel, uint8_t red, uint8_t green, uint8_t blue) {
@@ -384,6 +381,7 @@ void setPixelColor(int pixel, uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 // 0 = LEFT BACK, 1 = RIGHT BACK, 2 = RIGHT FRONT, 3 = LEFT FRONT
+
 void startLights() {  // red
   setPixelColor(0, 255, 0, 0);
   setPixelColor(1, 255, 0, 0);
